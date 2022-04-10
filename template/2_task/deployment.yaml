@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: maxnelipin/13-frontend
+        imagePullPolicy: IfNotPresent
+        name: frontend
+        ports:
+          - containerPort: 80
+        env:
+          - name: BASE_URL
+            value: "http://backend:9000"
+        volumeMounts:
+          - mountPath: "/static"
+            name: staitc-volume
+      volumes:
+        - name: staitc-volume
+          persistentVolumeClaim:
+            claimName: secondtaskvolume
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: backend
+  name: backend
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - image: maxnelipin/13-backend
+        imagePullPolicy: IfNotPresent
+        name: backend
+        ports:
+          - containerPort: 9000
+        env:
+          - name: DATABASE_URL
+            value: "postgres://postgres:postgres@db:5432/news"
+        volumeMounts:
+          - mountPath: "/static"
+            name: staitc-volume
+      volumes:
+        - name: staitc-volume
+          persistentVolumeClaim:
+            claimName: secondtaskvolume
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  replicas: 1
+  serviceName: db
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: postgres:13-alpine
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+
+            - name: POSTGRES_PASSWORD
+              value: postgres
+
+            - name: POSTGRES_DB
+              value: news
+          ports:
+            - containerPort: 5432

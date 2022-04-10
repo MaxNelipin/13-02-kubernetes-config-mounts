@@ -1,0 +1,26 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: secondtaskvolume
+spec:
+  storageClassName: "nfs"
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: secondtaskvolume
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 100Mi
+  nfs:
+    server: nfs-server
+    path: "/"
